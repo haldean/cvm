@@ -6,6 +6,14 @@ def parse_integral_flags(flags):
   else:
     return flags + 'i'
 
+def parse_floatpt_flags(flags):
+  if not flags:
+    return 'd'
+  elif 'f' in flags or 'd' in flags:
+    return flags
+  else:
+    return flags + 'd'
+
 def mklex(reserved, tokens):
   t_ignore = ' \t'
 
@@ -24,6 +32,20 @@ def mklex(reserved, tokens):
     print('Illegal character "%s"' % t.value[0])
     t.lexer.skip(1)
 
+  def t_floatpt_constant(t):
+    r'(?P<value>([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)([eE][+-]?[0-9]+)?)(?P<flags>[fFlL]?)'
+    t.value = (float(t.lexer.lexmatch.group('value')),
+        parse_floatpt_flags(t.lexer.lexmatch.group('flags')))
+    t.type = 'NUMBER'
+    return t
+
+  def t_floatpt_constant_nodecimal(t):
+    r'(?P<value>([1-9][0-9]*|0))(?P<flags>[fFlLdD]?)'
+    t.value = (float(t.lexer.lexmatch.group('value')),
+        parse_floatpt_flags(t.lexer.lexmatch.group('flags')))
+    t.type = 'NUMBER'
+    return t
+
   def t_hex_constant(t):
     r'(?P<value>0[xX][a-fA-F0-9]+)(?P<flags>[uUlL]{0,2})'
     t.value = (int(t.lexer.lexmatch.group('value'), 16),
@@ -33,10 +55,6 @@ def mklex(reserved, tokens):
 
   def t_decimal_int_constant(t):
     r'(?P<value>[1-9][0-9]+)(?P<flags>[uUlL]{0,2})'
-    if t.lexer.lexmatch.group('flags'):
-      ctype = t.lexer.lexmatch.group('flags')
-    else:
-      ctype = ''
     t.value = (int(t.lexer.lexmatch.group('value')),
         parse_integral_flags(t.lexer.lexmatch.group('flags')))
     t.type = 'NUMBER'
@@ -44,10 +62,6 @@ def mklex(reserved, tokens):
 
   def t_octal_int_constant(t):
     r'(?P<value>0[0-7]+)(?P<flags>[uUlL]{0,2})'
-    if t.lexer.lexmatch.group('flags'):
-      ctype = t.lexer.lexmatch.group('flags')
-    else:
-      ctype = ''
     t.value = (int(t.lexer.lexmatch.group('value'), 8),
         parse_integral_flags(t.lexer.lexmatch.group('flags')))
     t.type = 'NUMBER'
