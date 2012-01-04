@@ -1,3 +1,11 @@
+def parse_integral_flags(flags):
+  if not flags:
+    return 'i'
+  elif 'l' in flags:
+    return flags
+  else:
+    return flags + 'i'
+
 def mklex(reserved, tokens):
   t_ignore = ' \t'
 
@@ -17,20 +25,31 @@ def mklex(reserved, tokens):
     t.lexer.skip(1)
 
   def t_hex_constant(t):
-    r'0[xX][a-fA-F0-9]+'
-    t.value = int(t.value, 16)
+    r'(?P<value>0[xX][a-fA-F0-9]+)(?P<flags>[uUlL]{0,2})'
+    t.value = (int(t.lexer.lexmatch.group('value'), 16),
+        parse_integral_flags(t.lexer.lexmatch.group('flags')))
     t.type = 'NUMBER'
     return t
 
   def t_decimal_int_constant(t):
-    r'[1-9][0-9]*'
-    t.value = int(t.value)
+    r'(?P<value>[1-9][0-9]+)(?P<flags>[uUlL]{0,2})'
+    if t.lexer.lexmatch.group('flags'):
+      ctype = t.lexer.lexmatch.group('flags')
+    else:
+      ctype = ''
+    t.value = (int(t.lexer.lexmatch.group('value')),
+        parse_integral_flags(t.lexer.lexmatch.group('flags')))
     t.type = 'NUMBER'
     return t
 
   def t_octal_int_constant(t):
-    r'0[0-7]*'
-    t.value = int(t.value, 8)
+    r'(?P<value>0[0-7]+)(?P<flags>[uUlL]{0,2})'
+    if t.lexer.lexmatch.group('flags'):
+      ctype = t.lexer.lexmatch.group('flags')
+    else:
+      ctype = ''
+    t.value = (int(t.lexer.lexmatch.group('value'), 8),
+        parse_integral_flags(t.lexer.lexmatch.group('flags')))
     t.type = 'NUMBER'
     return t
 
