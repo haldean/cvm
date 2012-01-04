@@ -69,6 +69,8 @@ def mklex(reserved, tokens):
     t.type = 'NUMBER'
     return t
 
+  t_STRING_CONSTANT = r'"([^"]|\")*?"'
+
   # Operators and other misc. punctuation
 
   t_ADD = r'\+'
