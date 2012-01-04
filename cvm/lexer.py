@@ -73,7 +73,7 @@ def mklex(reserved, tokens):
 
   def t_STRING_CONSTANT(t):
     r'"([^"]|\")*?"'
-    t.value = (t.value, 's')
+    t.value = (t.value[1:-1], 's')
     return t
 
   # Operators and other misc. punctuation
