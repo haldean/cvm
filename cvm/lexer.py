@@ -22,6 +22,8 @@ def mklex(reserved, tokens):
     t.value = t.value.lower()
     if t.value in reserved:
       t.type = t.value
+    else:
+      t.value = (t.value, 'i')
     return t
 
   def t_newline(t):
