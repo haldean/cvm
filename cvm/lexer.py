@@ -1,5 +1,4 @@
 def mklex(reserved, tokens):
-  t_ASSIGN = r'='
   t_ignore = ' \t'
 
   def t_IDENTIFIER(t):
