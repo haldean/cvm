@@ -1,5 +1,6 @@
 from env import *
 from cvm.parse import parse
+from cvm.util import print_tree
 
 if '-i' in sys.argv:
   import readline
@@ -12,7 +13,7 @@ if '-i' in sys.argv:
       break
     if line == 'quit':
       break
-    print(parse(line))
+    print_tree(parse(line))
 else:
   s = sys.stdin.read()
   result = parse(s)

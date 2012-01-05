@@ -2,6 +2,8 @@
 # post (http://www.lysator.liu.se/c/ANSI-C-grammar-y.html)
 
 def mkparser(reserved, tokens, lexer):
+  # Statements
+
   def p_statements(t):
     '''statements : statement statements
      | statement'''
@@ -11,10 +13,35 @@ def mkparser(reserved, tokens, lexer):
       t[0] = [t[1]]
 
   def p_statement(t):
-    '''statement : expression SEMICOLON
-    | SEMICOLON
-    | declaration
+    '''statement : expression_statement
+    | compound_statement
     '''
+    t[0] = t[1]
+
+  def p_statement_list(t):
+    '''statement_list : statement
+    | statement_list statement'''
+    if len(t) == 2:
+      t[0] = [t[1]]
+    else:
+      t[0] = t[1] + [t[2]]
+
+  def p_compound_statement(t):
+    '''compound_statement : OPEN_BRACE CLOSE_BRACE
+    | OPEN_BRACE statement_list CLOSE_BRACE
+    | OPEN_BRACE declaration_list CLOSE_BRACE
+    | OPEN_BRACE declaration_list statement_list CLOSE_BRACE
+    '''
+    if len(t) == 3:
+      t[0] = None
+    elif len(t) == 4:
+      t[0] = t[2]
+    else:
+      t[0] = t[2] + t[3]
+
+  def p_expression_statement(t):
+    '''expression_statement : expression SEMICOLON
+    | SEMICOLON'''
     if t[1] == ';':
       t[0] = None
     else:
@@ -203,6 +230,14 @@ def mkparser(reserved, tokens, lexer):
     '''declaration : declaration_specifiers init_declarator_list SEMICOLON'''
     t[0] = ('declare', t[1], t[2])
 
+  def p_declaration_list(t):
+    '''declaration_list : declaration
+    | declaration_list declaration'''
+    if len(t) == 2:
+      t[0] = [t[1]]
+    else:
+      t[0] = t[1] + [t[2]]
+
   def p_declaration_specifiers(t):
     '''declaration_specifiers : storage_class_specifier
     | storage_class_specifier declaration_specifiers
@@ -292,7 +327,50 @@ def mkparser(reserved, tokens, lexer):
       t[0] = (t[1][0], t[1][1] + 'a', arrsize)
   
   def p_function_declarator(t):
-    pass
+    '''direct_declarator : direct_declarator LPAREN parameter_type_list RPAREN
+    | direct_declarator LPAREN identifier_list RPAREN
+    | direct_declarator LPAREN RPAREN'''
+    if len(t) == 4:
+      args = []
+    else:
+      args = t[3]
+    t[0] = ('fun', t[1], args)
+
+  def p_parameter_type_list(t):
+    '''parameter_type_list : parameter_list
+    | parameter_list COMMA ELLIPSIS
+    '''
+    if len(t) == 2:
+      t[0] = t[1]
+    else:
+      t[0] = t[1] + [t[3]]
+
+  def p_parameter_list(t):
+    '''parameter_list : parameter_declaration
+    | parameter_list COMMA parameter_declaration
+    '''
+    if len(t) == 2:
+      t[0] = [t[1]]
+    else:
+      t[0] = t[1] + [t[3]]
+
+  def p_parameter_declaration(t):
+    '''parameter_declaration : declaration_specifiers declarator
+    | declaration_specifiers
+    '''
+    if len(t) == 2:
+      t[0] = (t[1], None)
+    else:
+      t[0] = (t[1], t[2])
+
+  def p_identifier_list(t):
+    '''identifier_list : IDENTIFIER
+    | identifier_list COMMA IDENTIFIER
+    '''
+    if len(t) == 2:
+      t[0] = [t[1]]
+    else:
+      t[0] = t[1] + [t[3]]
 
   # Plumbing
 
