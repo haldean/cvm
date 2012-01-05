@@ -17,6 +17,7 @@ def mkparser(reserved, tokens, lexer):
     '''statement : expression_statement
     | compound_statement
     | selection_statement
+    | iteration_statement
     '''
     t[0] = t[1]
 
@@ -27,6 +28,25 @@ def mkparser(reserved, tokens, lexer):
       t[0] = [t[1]]
     else:
       t[0] = t[1] + [t[2]]
+
+  def p_iteration_statement(t):
+    '''iteration_statement : WHILE LPAREN expression RPAREN statement
+    | DO statement WHILE LPAREN expression RPAREN SEMICOLON
+    | FOR LPAREN expression_statement expression_statement RPAREN statement
+    | FOR LPAREN expression_statement expression_statement expression RPAREN statement
+    '''
+    if t[1] == 'while':
+      t[0] = ('while', t[3], t[5])
+    elif t[1] == 'do':
+      t[0] = ('do', t[5], t[2])
+    else:
+      if len(t) == 7:
+        update = None
+        body = t[6]
+      else:
+        update = t[5]
+        body = t[7]
+      t[0] = ('for', t[3], t[4], update, body)
 
   def p_compound_statement(t):
     '''compound_statement : OPEN_BRACE CLOSE_BRACE
@@ -86,6 +106,7 @@ def mkparser(reserved, tokens, lexer):
     | DECREMENT unary_expression
     | unary_operator unary_expression
     '''
+    # TODO: support postfix increment operator as well
     if len(t) == 2:
       t[0] = t[1]
     else:
