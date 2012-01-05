@@ -51,7 +51,7 @@ def mklex(reserved, tokens):
     return t
 
   def t_decimal_int_constant(t):
-    r'(?P<value>[1-9][0-9]*)(?P<flags>[uUlL]{0,2})'
+    r'(?P<value>([1-9][0-9]*|0))(?P<flags>[uUlL]{0,2})'
     t.value = (int(t.lexer.lexmatch.group('value')),
         parse_integral_flags(t.lexer.lexmatch.group('flags')))
     t.type = 'NUMBER'
