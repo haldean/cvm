@@ -50,13 +50,6 @@ def mklex(reserved, tokens):
     t.type = 'NUMBER'
     return t
 
-  def t_decimal_int_constant(t):
-    r'(?P<value>([1-9][0-9]*|0))(?P<flags>[uUlL]{0,2})'
-    t.value = (int(t.lexer.lexmatch.group('value')),
-        parse_integral_flags(t.lexer.lexmatch.group('flags')))
-    t.type = 'NUMBER'
-    return t
-
   def t_hex_constant(t):
     r'(?P<value>0[xX][a-fA-F0-9]+)(?P<flags>[uUlL]{0,2})'
     t.value = (int(t.lexer.lexmatch.group('value'), 16),
@@ -67,6 +60,13 @@ def mklex(reserved, tokens):
   def t_octal_int_constant(t):
     r'(?P<value>0[0-7]+)(?P<flags>[uUlL]{0,2})'
     t.value = (int(t.lexer.lexmatch.group('value'), 8),
+        parse_integral_flags(t.lexer.lexmatch.group('flags')))
+    t.type = 'NUMBER'
+    return t
+
+  def t_decimal_int_constant(t):
+    r'(?P<value>([1-9][0-9]*|0))(?P<flags>[uUlL]{0,2})'
+    t.value = (int(t.lexer.lexmatch.group('value')),
         parse_integral_flags(t.lexer.lexmatch.group('flags')))
     t.type = 'NUMBER'
     return t

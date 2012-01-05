@@ -2,23 +2,36 @@
 # post (http://www.lysator.liu.se/c/ANSI-C-grammar-y.html)
 
 def mkparser(reserved, tokens, lexer):
+  def p_translation_unit(t):
+    '''translation_unit : external_declaration
+    | translation_unit external_declaration
+    '''
+    if len(t) == 2:
+      t[0] = [t[1]]
+    else:
+      t[0] = t[1] + [t[2]]
+
+  def p_external_declaration(t):
+    '''external_declaration : function_definition
+    | declaration'''
+    t[0] = t[1]
+
+  def p_function_definition(t):
+    '''function_definition : declaration_specifiers declarator compound_statement
+    '''
+    # TODO: support all function definitions
+    t[0] = ('fun', t[1], t[2], t[3])
 
   # Statements
-
-  def p_statements(t):
-    '''statements : statement statements
-     | statement'''
-    if len(t) == 3:
-      t[0] = [t[1]] + t[2]
-    else:
-      t[0] = [t[1]]
 
   def p_statement(t):
     '''statement : expression_statement
     | compound_statement
     | selection_statement
     | iteration_statement
+    | jump_statement
     '''
+    # TODO: label statement
     t[0] = t[1]
 
   def p_statement_list(t):
@@ -29,15 +42,33 @@ def mkparser(reserved, tokens, lexer):
     else:
       t[0] = t[1] + [t[2]]
 
+  def p_jump_statement(t):
+    '''jump_statement : GOTO IDENTIFIER SEMICOLON
+    | CONTINUE SEMICOLON
+    | BREAK SEMICOLON
+    | RETURN SEMICOLON
+    | RETURN expression SEMICOLON
+    '''
+    if t[1].lower() == 'goto':
+      t[0] = ('goto', t[2])
+    elif t[1].lower() == 'return':
+      if len(t) == 3:
+        val = None
+      else:
+        val = t[2]
+      t[0] = ('return', val)
+    else:
+      t[0] = t[1]
+
   def p_iteration_statement(t):
     '''iteration_statement : WHILE LPAREN expression RPAREN statement
     | DO statement WHILE LPAREN expression RPAREN SEMICOLON
     | FOR LPAREN expression_statement expression_statement RPAREN statement
     | FOR LPAREN expression_statement expression_statement expression RPAREN statement
     '''
-    if t[1] == 'while':
+    if t[1].lower() == 'while':
       t[0] = ('while', t[3], t[5])
-    elif t[1] == 'do':
+    elif t[1].lower() == 'do':
       t[0] = ('do', t[5], t[2])
     else:
       if len(t) == 7:
@@ -368,7 +399,7 @@ def mkparser(reserved, tokens, lexer):
       args = []
     else:
       args = t[3]
-    t[0] = ('fun', t[1], args)
+    t[0] = (t[1], args)
 
   def p_parameter_type_list(t):
     '''parameter_type_list : parameter_list
