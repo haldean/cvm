@@ -1,3 +1,6 @@
+# Heavily inspired by Jeff Lee's Yacc grammar, by way of Jutta Degener's 1995
+# post (http://www.lysator.liu.se/c/ANSI-C-grammar-y.html)
+
 def mkparser(reserved, tokens, lexer):
   def p_statements(t):
     '''statements : statement statements
@@ -8,11 +11,23 @@ def mkparser(reserved, tokens, lexer):
       t[0] = [t[1]]
 
   def p_statement(t):
-    'statement : expression SEMICOLON'
-    t[0] = t[1]
+    '''statement : expression SEMICOLON
+    | SEMICOLON
+    | declaration
+    '''
+    if t[1] == ';':
+      t[0] = None
+    else:
+      t[0] = t[1]
+
+  # Expressions
 
   def p_expression(t):
     'expression : assignment_expression'
+    t[0] = t[1]
+
+  def p_constant_expression(t):
+    'constant_expression : conditional_expression'
     t[0] = t[1]
 
   def p_primary_expression(t):
@@ -181,6 +196,105 @@ def mkparser(reserved, tokens, lexer):
     | OR_ASSIGN
     '''
     t[0] = t[1]
+
+  # Declarations
+
+  def p_declaration(t):
+    '''declaration : declaration_specifiers init_declarator_list SEMICOLON'''
+    t[0] = ('declare', t[1], t[2])
+
+  def p_declaration_specifiers(t):
+    '''declaration_specifiers : storage_class_specifier
+    | storage_class_specifier declaration_specifiers
+    | type_specifier
+    | type_specifier declaration_specifiers
+    | type_qualifier
+    | type_qualifier declaration_specifiers
+    '''
+    if len(t) == 2:
+      t[0] = [t[1]]
+    else:
+      t[0] = [t[1]] + t[2]
+
+  def p_storage_class(t):
+    '''storage_class_specifier : TYPEDEF
+    | EXTERN
+    | STATIC
+    | AUTO
+    | REGISTER
+    '''
+    t[0] = t[1]
+
+  def p_type(t):
+    '''type_specifier : VOID
+    | CHAR
+    | SHORT
+    | INT
+    | LONG
+    | FLOAT
+    | DOUBLE
+    | SIGNED
+    | UNSIGNED
+    '''
+    t[0] = t[1]
+
+  def p_type_qualifier(t):
+    '''type_qualifier : CONST
+    | VOLATILE
+    '''
+    t[0] = t[1]
+
+  def p_init_declarator_list(t):
+    '''init_declarator_list : init_declarator
+    | init_declarator_list COMMA init_declarator
+    '''
+    if len(t) == 2:
+      t[0] = [t[1]]
+    else:
+      t[0] = t[1] + [t[3]]
+
+  def p_init_declarator(t):
+    '''init_declarator : declarator
+    | declarator EQ initializer'''
+    if len(t) == 2:
+      t[0] = (t[1], None)
+    else:
+      t[0] = (t[1], t[2])
+
+  def p_declarator(t):
+    '''declarator : direct_declarator'''
+    # TODO: support pointer declarators
+    t[0] = t[1]
+
+  def p_initializer(t):
+    '''initializer : assignment_expression'''
+    # TODO: support initializer lists
+    t[0] = t[1]
+
+  def p_direct_declarator(t):
+    '''direct_declarator : IDENTIFIER
+    | LPAREN declarator RPAREN
+    | direct_declarator LBRACE constant_expression RBRACE
+    | direct_declarator LBRACE RBRACE
+    '''
+    # Declarators are a 2-tuple of (identifier, array-size). array-size is None
+    # for scalars.
+    if len(t) == 2:
+      t[0] = t[1]
+    elif t[1] == '(':
+      t[0] = t[2]
+    else:
+      if len(t) == 5:
+        arrsize = t[3]
+      else:
+        arrsize = 0
+      # array tuple: (identifier, type (with 'a' for array), array size)
+      t[0] = (t[1][0], t[1][1] + 'a', arrsize)
+  
+  def p_function_declarator(t):
+    pass
+
+  # Plumbing
 
   def p_error(t):
     if t:
