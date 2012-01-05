@@ -255,11 +255,11 @@ def mkparser(reserved, tokens, lexer):
 
   def p_init_declarator(t):
     '''init_declarator : declarator
-    | declarator EQ initializer'''
+    | declarator ASSIGN initializer'''
     if len(t) == 2:
       t[0] = (t[1], None)
     else:
-      t[0] = (t[1], t[2])
+      t[0] = (t[1], t[3])
 
   def p_declarator(t):
     '''declarator : direct_declarator'''
