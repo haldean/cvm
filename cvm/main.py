@@ -17,4 +17,4 @@ if '-i' in sys.argv:
 else:
   s = sys.stdin.read()
   result = parse(s)
-  print(result)
+  print_tree(result)
