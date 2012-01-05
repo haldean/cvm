@@ -2,10 +2,7 @@ from env import *
 from cvm.parse import parse
 
 if '-i' in sys.argv:
-  try:
-    import readline
-  except:
-    pass
+  import readline
   while True:
     try:
       line = read_input('> ')
