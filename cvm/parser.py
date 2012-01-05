@@ -2,6 +2,7 @@
 # post (http://www.lysator.liu.se/c/ANSI-C-grammar-y.html)
 
 def mkparser(reserved, tokens, lexer):
+
   # Statements
 
   def p_statements(t):
@@ -15,6 +16,7 @@ def mkparser(reserved, tokens, lexer):
   def p_statement(t):
     '''statement : expression_statement
     | compound_statement
+    | selection_statement
     '''
     t[0] = t[1]
 
@@ -46,6 +48,17 @@ def mkparser(reserved, tokens, lexer):
       t[0] = None
     else:
       t[0] = t[1]
+
+  def p_selection_statement(t):
+    '''selection_statement : IF LPAREN expression RPAREN statement
+    | IF LPAREN expression RPAREN statement ELSE statement
+    '''
+    # TODO: support switch
+    if len(t) == 6:
+      el = None
+    else:
+      el = t[7]
+    t[0] = ('if', t[3], t[5], el)
 
   # Expressions
 
