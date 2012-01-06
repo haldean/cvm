@@ -1,8 +1,11 @@
 from parse.c import parse
 from util import print_tree
+from translate import translate
 
 def run(source):
-  print_tree(parse(preprocess(source)))
+  tree = parse(preprocess(source))
+  print_tree(tree)
+  translate(tree)
 
 def preprocess(source):
   result = ''
