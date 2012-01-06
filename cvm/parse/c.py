@@ -18,8 +18,8 @@ tokens = [
     'TERNARY', 'XOR_ASSIGN',
     ] + map(str.upper, reserved)
 
-import cvm.lexer as lx
-import cvm.parser as ps
+import cvm.parse.lexer as lx
+import cvm.parse.parser as ps
 
 lexer = lx.mklex(reserved, tokens)
 parser = ps.mkparser(reserved, tokens, lexer)

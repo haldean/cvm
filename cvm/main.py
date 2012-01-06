@@ -1,5 +1,5 @@
 from env import *
-from cvm.parse import parse
+from cvm.parse.c import parse
 from cvm.preprocessor import preprocessor
 from cvm.util import print_tree
 
