@@ -124,12 +124,21 @@ def mkparser(reserved, tokens, lexer):
   def p_primary_expression(t):
     '''primary_expression : NUMBER
       | IDENTIFIER
-      | STRING_CONSTANT
+      | string_literal
       | LPAREN expression RPAREN'''
     if len(t) == 2:
       t[0] = t[1]
     else:
       t[0] = t[2]
+
+  def p_string_literal(t):
+    '''string_literal : STRING_CONSTANT
+    | string_literal STRING_CONSTANT
+    '''
+    if len(t) == 2:
+      t[0] = t[1]
+    else:
+      t[0] = t[1] + t[2]
 
   def p_postfix_expression(t):
     '''postfix_expression : primary_expression

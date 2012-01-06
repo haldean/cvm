@@ -38,6 +38,12 @@ def mklex(reserved, tokens):
 
   # Constants
 
+  def t_character_constant(t):
+    r"'(.|\\[abfnrtv'\"\\\?]|\\[0-9]{3}|\\x[a-fA-F0-9]{2}([a-fA-F0-9]{2})?)'"
+    t.value = (ord(eval(t.value)[0]), 'uc')
+    t.type = 'NUMBER'
+    return t
+
   def t_floatpt_constant(t):
     r'(?P<value>([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)([eE][+-]?[0-9]+)?)(?P<flags>[fFlL]?)'
     t.value = (float(t.lexer.lexmatch.group('value')),
@@ -131,11 +137,11 @@ def mklex(reserved, tokens):
   return lex.lex()
 
 def test_lex():
-  import env
-  import cvm.parse
+  from ..env import read_input
   import sys
+  import c
 
-  lx = mklex(cvm.parse.reserved, cvm.parse.tokens)
+  lx = mklex(c.reserved, c.tokens)
   lx.input(' '.join(sys.argv[1:]))
   for tok in lx:
     print(tok)
