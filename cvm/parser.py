@@ -131,8 +131,41 @@ def mkparser(reserved, tokens, lexer):
     else:
       t[0] = t[2]
 
+  def p_postfix_expression(t):
+    '''postfix_expression : primary_expression
+    | postfix_expression LBRACE expression RBRACE
+    | postfix_expression LPAREN RPAREN
+    | postfix_expression LPAREN argument_expression_list RPAREN
+    | postfix_expression PERIOD IDENTIFIER
+    | postfix_expression INCREMENT
+    | postfix_expression DECREMENT
+    '''
+    if len(t) == 2:
+      t[0] = t[1]
+    elif len(t) == 3:
+      t[0] = (t[2], t[1])
+    elif len(t) == 4:
+      if t[2] == '.':
+        t[0] = ('.', t[1], t[3])
+      else:
+        t[0] = ('call', t[1], [])
+    elif len(t) == 5:
+      if t[2] == '[':
+        t[0] = ('array', t[1], t[3])
+      else:
+        t[0] = ('call', t[1], t[3])
+
+  def p_argument_expression_list(t):
+    '''argument_expression_list : assignment_expression
+    | argument_expression_list COMMA assignment_expression
+    '''
+    if len(t) == 2:
+      t[0] = [t[1]]
+    else:
+      t[0] = t[1] + [t[2]]
+
   def p_unary_expression(t):
-    '''unary_expression : primary_expression
+    '''unary_expression : postfix_expression
     | INCREMENT unary_expression
     | DECREMENT unary_expression
     | unary_operator unary_expression
