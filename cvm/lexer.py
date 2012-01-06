@@ -19,8 +19,7 @@ def mklex(reserved, tokens):
 
   def t_IDENTIFIER(t):
     r'[a-zA-Z_][a-zA-Z0-9_]*'
-    t.value = t.value.lower()
-    if t.value in reserved:
+    if t.value.lower() in reserved:
       t.type = t.value.upper()
     else:
       t.value = (t.value, 'i')

@@ -137,6 +137,7 @@ def mkparser(reserved, tokens, lexer):
     | postfix_expression LPAREN RPAREN
     | postfix_expression LPAREN argument_expression_list RPAREN
     | postfix_expression PERIOD IDENTIFIER
+    | postfix_expression DEREF_ARROW IDENTIFIER
     | postfix_expression INCREMENT
     | postfix_expression DECREMENT
     '''
@@ -145,8 +146,8 @@ def mkparser(reserved, tokens, lexer):
     elif len(t) == 3:
       t[0] = (t[2], t[1])
     elif len(t) == 4:
-      if t[2] == '.':
-        t[0] = ('.', t[1], t[3])
+      if t[2] == '.' or t[2] == '->':
+        t[0] = (t[2], t[1], t[3])
       else:
         t[0] = ('call', t[1], [])
     elif len(t) == 5:
@@ -168,13 +169,15 @@ def mkparser(reserved, tokens, lexer):
     '''unary_expression : postfix_expression
     | INCREMENT unary_expression
     | DECREMENT unary_expression
+    | SIZEOF unary_expression
     | unary_operator unary_expression
     '''
-    # TODO: support postfix increment operator as well
     if len(t) == 2:
       t[0] = t[1]
+    elif len(t) == 3:
+      t[0] = (t[1].lower(), t[2])
     else:
-      t[0] = (t[1], t[2])
+      t[0] = (t[1].lower(), t[3])
 
   def p_unary_operator(t):
     '''unary_operator : BITWISE_AND
@@ -395,14 +398,39 @@ def mkparser(reserved, tokens, lexer):
       t[0] = (t[1], t[3])
 
   def p_declarator(t):
-    '''declarator : direct_declarator'''
-    # TODO: support pointer declarators
-    t[0] = t[1]
+    '''declarator : direct_declarator
+    | pointer direct_declarator'''
+    if len(t) == 2:
+      t[0] = t[1]
+    else:
+      t[0] = (t[1], t[2])
 
   def p_initializer(t):
     '''initializer : assignment_expression'''
     # TODO: support initializer lists
     t[0] = t[1]
+
+  def p_pointer(t):
+    '''pointer : STAR
+    | STAR type_qualifier_list
+    | STAR pointer
+    | STAR type_qualifier_list pointer
+    '''
+    if len(t) == 2:
+      t[0] = [t[1]]
+    elif len(t) == 3:
+      t[0] = [t[1]] + t[2]
+    else:
+      t[0] = [t[1]] + t[2] + t[3]
+
+  def p_type_qualifier_list(t):
+    '''type_qualifier_list : type_qualifier
+    | type_qualifier_list type_qualifier
+    '''
+    if len(t) == 2:
+      t[0] = [t[1]]
+    else:
+      t[0] = t[1] + [t[2]]
 
   def p_direct_declarator(t):
     '''direct_declarator : IDENTIFIER
