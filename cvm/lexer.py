@@ -26,6 +26,9 @@ def mklex(reserved, tokens):
       t.value = (t.value, 'i')
     return t
 
+  t_ignore_LINE_COMMENT = r'\/\/.*'
+  t_ignore_MULTILINE_COMMENT = r'/\*(.|\n)*?\*/'
+
   def t_newline(t):
     r'\n'
     t.lexer.lineno += 1

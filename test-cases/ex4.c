@@ -3,7 +3,11 @@
 #include <stdio.h>
 #include <X11/Xlib.h>
 
-/* Yes, TCC can use X11 too ! */
+/* 
+ * One kind of comment
+ */
+
+// Another kind of comment
 
 int main(int argc, char **argv)
 {
