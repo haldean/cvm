@@ -1,6 +1,10 @@
 from env import *
 from cvm.parse import parse
+from cvm.preprocessor import preprocessor
 from cvm.util import print_tree
+
+def compile(source):
+  print_tree(parse(preprocessor(source)))
 
 if '-i' in sys.argv:
   import readline
@@ -13,8 +17,11 @@ if '-i' in sys.argv:
       break
     if line == 'quit':
       break
-    print_tree(parse(line))
+    compile(line)
 else:
-  s = sys.stdin.read()
-  result = parse(s)
-  print_tree(result)
+  if len(sys.argv) > 1:
+    with open(sys.argv[1], 'r') as f:
+      s = f.read()
+  else:
+    s = sys.stdin.read()
+  compile(s)
