@@ -22,7 +22,7 @@ def mklex(reserved, tokens):
     if t.value.lower() in reserved:
       t.type = t.value.upper()
     else:
-      t.value = (t.value, 'i')
+      t.value = (t.value, 'var')
     return t
 
   t_ignore_LINE_COMMENT = r'\/\/.*'
