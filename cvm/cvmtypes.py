@@ -10,6 +10,14 @@ class cvmtype(object):
         self.integral == 'i' and 'integer' or 'floating-point')
   __repr__ = __str__
 
+class cvmptr(object):
+  def __init__(self, pointsto):
+    self.pointsto = pointsto
+
+  def __str__(self):
+    return '<ptr %s>' % self.pointsto
+  __repr__ = __str__
+
 cvmtypes = {
     'char'    : cvmtype(1, 's', 'i'),
     'uchar'   : cvmtype(1, 'u', 'i'),
@@ -25,6 +33,17 @@ cvmtypes = {
     'double'  : cvmtype(64, 's', 'f'),
     'ldouble' : cvmtype(128, 's', 'f'),
     }
+
+def declarator(declarator):
+  if isinstance(declarator[0], list):
+    ctype = typefor(declarator[0])
+    if isinstance(declarator[1][0], list):
+      for ptr in declarator[1][0]:
+        if ptr == '*':
+          ctype = cvmptr(ctype)
+      return (ctype, declarator[1][1][0])
+    return (typefor(declarator[0]), declarator[1][0])
+  return (cvmtypes['int'], declarator[0])
 
 def typefor(types):
   types = set(types)
