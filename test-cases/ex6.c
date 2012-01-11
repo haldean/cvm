@@ -1,7 +1,8 @@
+int c = 1;
+
 int main() {
-  int a = 2, b, *c, **d, e = 8;
-  b = a * e;
-  c = &b;
-  d = &c;
-  b++;
+  int a = 1, b = 1;
+  do {
+    a = c * (a + b);
+  } while (a < 6);
 }

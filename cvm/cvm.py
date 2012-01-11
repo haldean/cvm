@@ -5,7 +5,8 @@ from translate import translate
 def run(source):
   tree = parse(preprocess(source))
   print_tree(tree)
-  translate(tree)
+  if tree:
+    translate(tree)
 
 def preprocess(source):
   result = ''
