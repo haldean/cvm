@@ -3,11 +3,13 @@ import cvmtypes
 
 def translate(root):
   glob = {}
+  funcs = {}
+
   init_code = []
   for item in root:
     if item[0] == 'fun':
       function = translate_function(item, glob)
-      glob[item[2][0][0]] = function
+      funcs[item[2][0][0]] = function
     elif item[0] == 'declare':
       for var, init in item[2]:
         cvmtype, name = cvmtypes.declarator((item[1], var))
@@ -19,7 +21,7 @@ def translate(root):
       raise Exception('Only function definitions and declarations'
         'are allowed at top level.')
 
-  return glob, init_code
+  return glob, funcs, init_code
 
 def translate_function(ftree, glob):
   fname = ftree[2][0][0]
