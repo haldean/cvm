@@ -1,3 +1,6 @@
 *.pyc
+*.cvm
+
 parser.out
 parsetab.py
+lextab.py
