@@ -134,7 +134,7 @@ def mklex(reserved, tokens):
   t_XOR_ASSIGN = r'\^='
 
   import ply.lex as lex
-  return lex.lex()
+  return lex.lex(optimize=True, outputdir='./cvmc/')
 
 def test_lex():
   from ..env import read_input

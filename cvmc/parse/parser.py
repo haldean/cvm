@@ -516,4 +516,4 @@ def mkparser(reserved, tokens, lexer):
       print('Syntax error')
 
   import ply.yacc as yacc
-  return yacc.yacc()
+  return yacc.yacc(outputdir='./cvmc/', debug=False)
