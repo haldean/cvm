@@ -36,6 +36,8 @@ def add_declaration(loc, decl):
     loc[name] = (cvmtype, init)
 
 def translate_compound(ftree, glob):
+  if not ftree: return [], {}
+
   declarations = []
   loc = {}
 
@@ -60,7 +62,7 @@ def translate_compound(ftree, glob):
 def translate_declaration(var, data, glob):
   return (
       translate_statement(data[1], glob) +
-      [('store', ('result', 'reg'), (var, 'var'))])
+      [('store', (var, 'var'))])
 
 def translate_statement(ftree, glob):
   '''
@@ -74,7 +76,7 @@ def translate_statement(ftree, glob):
   # Assignment
   if ftree[0] == '=':
     rhs = translate_statement(ftree[2], glob)
-    return rhs + [('store', ('result', 'reg'), ftree[1])]
+    return rhs + [('store', ftree[1])]
 
   # Variable access
   if ftree[1] == 'var':
@@ -107,7 +109,7 @@ def translate_statement(ftree, glob):
   if ftree[0] == '|':
     return translate_binop_expression('or', ftree, glob)
   if ftree[0] == '^':
-    return translate_binop_expression('or', ftree, glob)
+    return translate_binop_expression('xor', ftree, glob)
 
   if ftree[0] == '<<':
     return translate_binop_expression('lsh', ftree, glob)
@@ -231,23 +233,21 @@ def translate_statement(ftree, glob):
   if 'i' in ftree[1] or 'l' in ftree[1] or 'f' in ftree[1] or 'd' in ftree[1]:
     return [('ldconst', ftree[0])]
 
-  print('Warning: statement tree %s could not be translated.' % ftree)
+  print('Warning: statement tree %s could not be translated.' % (ftree,))
   return []
 
 def translate_unop_expression(op, ftree, glob):
   return (
       translate_statement(ftree[1], glob) + 
-      [(op, ('result', 'reg'))] +
-      [('store', ('result', 'reg'), ftree[1])])
+      [(op,), ('store', ftree[1])])
 
 def translate_binop_expression(op, ftree, glob):
   return (
       translate_statement(ftree[1], glob) +
-      [('store', ('result', 'reg'), ('t0', 'reg'))] +
       translate_statement(ftree[2], glob) +
-      [(op, ('result', 'reg'), ('t0', 'reg'))])
+      [(op,)])
 
 def translate_assign_expression(op, ftree, glob):
   return (
       translate_binop_expression(op, ftree, glob) +
-      [('store', ('result', 'reg'), ftree[1])])
+      [('store', ftree[1])])
