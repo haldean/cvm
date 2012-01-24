@@ -1,5 +1,5 @@
-from env import *
-from cvm import run
+from cvmc.env import *
+from cvmc.cvm import run
 
 if '-i' in sys.argv:
   import readline
