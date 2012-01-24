@@ -8,7 +8,7 @@ def translate(root):
   init_code = []
   for item in root:
     if item[0] == 'fun':
-      function = translate_function(item, glob)
+      function = translate_function(item, glob, funcs)
       funcs[item[2][0][0]] = function
     elif item[0] == 'declare':
       for var, init in item[2]:
@@ -16,17 +16,17 @@ def translate(root):
         glob[name] = (cvmtype, init)
         if init:
           init_code.extend(
-              translate_declaration(name, (cvmtype, init), glob))
+              translate_declaration(name, (cvmtype, init), glob, funcs))
     else:
       raise Exception('Only function definitions and declarations'
         'are allowed at top level.')
 
   return glob, funcs, init_code
 
-def translate_function(ftree, glob):
+def translate_function(ftree, glob, funcs):
   fname = ftree[2][0][0]
   fargs = list(map(cvmtypes.declarator, ftree[2][1]))
-  fcode, flocals = translate_compound(ftree[3], glob)
+  fcode, flocals = translate_compound(ftree[3], glob, funcs)
   fret = cvmtypes.typefor(ftree[1])
   return function(fname, fcode, fargs, fret, flocals)
 
@@ -35,7 +35,7 @@ def add_declaration(loc, decl):
     cvmtype, name = cvmtypes.declarator((decl[1], var))
     loc[name] = (cvmtype, init)
 
-def translate_compound(ftree, glob):
+def translate_compound(ftree, glob, funcs):
   if not ftree: return [], {}
 
   declarations = []
@@ -53,110 +53,123 @@ def translate_compound(ftree, glob):
   code = []
   for var, data in loc.items():
     if data[1]:
-      code.extend(translate_declaration(var, data, glob))
+      code.extend(translate_declaration(var, data, glob, funcs))
   for node in ftree[first_statement:]:
-    code.extend(translate_statement(node, glob))
+    code.extend(translate_statement(node, glob, funcs))
 
   return code, loc
 
-def translate_declaration(var, data, glob):
+def translate_declaration(var, data, glob, funcs):
   return (
-      translate_statement(data[1], glob) +
+      translate_statement(data[1], glob, funcs) +
       [('store', (var, 'var'))])
 
-def translate_statement(ftree, glob):
+def translate_statement(ftree, glob, funcs):
   '''
   TODO:
 
   BREAK
   CALL
   GOTO
-  RETURN
   '''
   # Assignment
   if ftree[0] == '=':
-    rhs = translate_statement(ftree[2], glob)
+    rhs = translate_statement(ftree[2], glob, funcs)
     return rhs + [('store', ftree[1])]
 
   # Variable access
   if ftree[1] == 'var':
     return [('load', ftree)]
 
+  # Call stack-related
+  if ftree[0] == 'call':
+    func = funcs[ftree[1][0]]
+    if len(func.args) != len(ftree[2]):
+      raise Exception('Not enough arguments to function "%s"' % ftree[1][0])
+
+    arg_evals = []
+    for arg in ftree[2]:
+      arg_evals.extend(translate_statement(arg, glob, funcs))
+    return arg_evals + [('call', (ftree[1][0], 'func'))]
+
+  if ftree[0] == 'return':
+    return translate_statement(ftree[1], glob, funcs) + [('return',)]
+
   # Unary operators
   if ftree[0] == '++':
-    return translate_unop_expression('incr', ftree, glob)
+    return translate_unop_expression('incr', ftree, glob, funcs)
   if ftree[0] == '--':
-    return translate_unop_expression('decr', ftree, glob)
+    return translate_unop_expression('decr', ftree, glob, funcs)
   if ftree[0] == '~':
-    return translate_unop_expression('not', ftree, glob)
+    return translate_unop_expression('not', ftree, glob, funcs)
   if ftree[0] == '!':
-    return translate_unop_expression('bnot', ftree, glob)
+    return translate_unop_expression('bnot', ftree, glob, funcs)
 
   # Binary operators
   if ftree[0] == '*' and len(ftree) == 3:
-    return translate_binop_expression('mul', ftree, glob)
+    return translate_binop_expression('mul', ftree, glob, funcs)
   if ftree[0] == '+':
-    return translate_binop_expression('add', ftree, glob)
+    return translate_binop_expression('add', ftree, glob, funcs)
   if ftree[0] == '-':
-    return translate_binop_expression('sub', ftree, glob)
+    return translate_binop_expression('sub', ftree, glob, funcs)
   if ftree[0] == '/':
-    return translate_binop_expression('div', ftree, glob)
+    return translate_binop_expression('div', ftree, glob, funcs)
   if ftree[0] == '%':
-    return translate_binop_expression('mod', ftree, glob)
+    return translate_binop_expression('mod', ftree, glob, funcs)
 
   if ftree[0] == '&' and len(ftree[0]) == 3:
-    return translate_binop_expression('and', ftree, glob)
+    return translate_binop_expression('and', ftree, glob, funcs)
   if ftree[0] == '|':
-    return translate_binop_expression('or', ftree, glob)
+    return translate_binop_expression('or', ftree, glob, funcs)
   if ftree[0] == '^':
-    return translate_binop_expression('xor', ftree, glob)
+    return translate_binop_expression('xor', ftree, glob, funcs)
 
   if ftree[0] == '<<':
-    return translate_binop_expression('lsh', ftree, glob)
+    return translate_binop_expression('lsh', ftree, glob, funcs)
   if ftree[0] == '>>':
-    return translate_binop_expression('rsh', ftree, glob)
+    return translate_binop_expression('rsh', ftree, glob, funcs)
 
   if ftree[0] == '&&':
-    return translate_binop_expression('band', ftree, glob)
+    return translate_binop_expression('band', ftree, glob, funcs)
   if ftree[0] == '||':
-    return translate_binop_expression('bor', ftree, glob)
+    return translate_binop_expression('bor', ftree, glob, funcs)
 
   # Comparison operators
   if ftree[0] == '==':
-    return translate_binop_expression('eq', ftree, glob)
+    return translate_binop_expression('eq', ftree, glob, funcs)
   if ftree[0] == '>=':
-    return translate_binop_expression('geq', ftree, glob)
+    return translate_binop_expression('geq', ftree, glob, funcs)
   if ftree[0] == '<=':
-    return translate_binop_expression('leq', ftree, glob)
+    return translate_binop_expression('leq', ftree, glob, funcs)
   if ftree[0] == '>':
-    return translate_binop_expression('gt', ftree, glob)
+    return translate_binop_expression('gt', ftree, glob, funcs)
   if ftree[0] == '<':
-    return translate_binop_expression('lt', ftree, glob)
+    return translate_binop_expression('lt', ftree, glob, funcs)
   if ftree[0] == '!=':
-    return translate_binop_expression('neq', ftree, glob)
+    return translate_binop_expression('neq', ftree, glob, funcs)
 
   # Assignment operators
   if ftree[0] == '+=':
-    return translate_assign_expression('add', ftree, glob)
+    return translate_assign_expression('add', ftree, glob, funcs)
   if ftree[0] == '-=':
-    return translate_assign_expression('sub', ftree, glob)
+    return translate_assign_expression('sub', ftree, glob, funcs)
   if ftree[0] == '*=':
-    return translate_assign_expression('mul', ftree, glob)
+    return translate_assign_expression('mul', ftree, glob, funcs)
   if ftree[0] == '/=':
-    return translate_assign_expression('div', ftree, glob)
+    return translate_assign_expression('div', ftree, glob, funcs)
   if ftree[0] == '%=':
-    return translate_assign_expression('mod', ftree, glob)
+    return translate_assign_expression('mod', ftree, glob, funcs)
 
   if ftree[0] == '&=':
-    return translate_assign_expression('and', ftree, glob)
+    return translate_assign_expression('and', ftree, glob, funcs)
   if ftree[0] == '|=':
-    return translate_assign_expression('or', ftree, glob)
+    return translate_assign_expression('or', ftree, glob, funcs)
   if ftree[0] == '^=':
-    return translate_assign_expression('xor', ftree, glob)
+    return translate_assign_expression('xor', ftree, glob, funcs)
   if ftree[0] == '>>=':
-    return translate_assign_expression('rsh', ftree, glob)
+    return translate_assign_expression('rsh', ftree, glob, funcs)
   if ftree[0] == '<<=':
-    return translate_assign_expression('lsh', ftree, glob)
+    return translate_assign_expression('lsh', ftree, glob, funcs)
 
   # Dereferencing
   if ftree[0] == '->':
@@ -167,15 +180,15 @@ def translate_statement(ftree, glob):
     return [('addr', ftree[1])]
   if ftree[0] == '*':
     return (
-        translate_statement(ftree[1], glob) +
+        translate_statement(ftree[1], glob, funcs) +
         [('load', ('result', 'reg'))])
 
   # Conditionals
   if ftree[0] == 'if':
-    code_true, ignore = translate_compound(ftree[2], glob)
-    code_false, ignore = translate_compound(ftree[3], glob)
+    code_true, ignore = translate_compound(ftree[2], glob, funcs)
+    code_false, ignore = translate_compound(ftree[3], glob, funcs)
     return (
-        translate_statement(ftree[1], glob) +
+        translate_statement(ftree[1], glob, funcs) +
         # Conditional Offset Zero JuMP -- 
         # relative jump if result register == 0
         [('ozjmp', len(code_true) + 2)] +
@@ -184,10 +197,10 @@ def translate_statement(ftree, glob):
         code_false)
 
   if ftree[0] == '?':
-    code_true = translate_statement(ftree[2], glob)
-    code_false = translate_statement(ftree[3], glob)
+    code_true = translate_statement(ftree[2], glob, funcs)
+    code_false = translate_statement(ftree[3], glob, funcs)
     return (
-        translate_statement(ftree[1], glob) +
+        translate_statement(ftree[1], glob, funcs) +
         # Conditional Offset Zero JuMP -- 
         # relative jump if result register == 0
         [('ozjmp', len(code_true) + 2)] +
@@ -197,8 +210,8 @@ def translate_statement(ftree, glob):
         [('nop',)])
 
   if ftree[0] == 'while':
-    condition = translate_statement(ftree[1], glob)
-    code_true, ignore = translate_compound(ftree[2], glob)
+    condition = translate_statement(ftree[1], glob, funcs)
+    code_true, ignore = translate_compound(ftree[2], glob, funcs)
     return (
         condition +
         [('ozjmp', len(code_true) + 2)] +
@@ -206,8 +219,8 @@ def translate_statement(ftree, glob):
         [('ojmp', -len(code_true) - len(condition) - 1), ('nop',)])
 
   if ftree[0] == 'do':
-    condition = translate_statement(ftree[1], glob)
-    code_true, ignore = translate_compound(ftree[2], glob)
+    condition = translate_statement(ftree[1], glob, funcs)
+    code_true, ignore = translate_compound(ftree[2], glob, funcs)
     return (
         code_true +
         condition +
@@ -216,14 +229,14 @@ def translate_statement(ftree, glob):
          ('nop',)])
 
   if ftree[0] == 'for':
-    body, ignore = translate_compound(ftree[4], glob)
-    condition = translate_statement(ftree[2], glob)
+    body, ignore = translate_compound(ftree[4], glob, funcs)
+    condition = translate_statement(ftree[2], glob, funcs)
     update = []
     if ftree[3]:
-      update = translate_statement(ftree[3], glob)
+      update = translate_statement(ftree[3], glob, funcs)
 
     return (
-        translate_statement(ftree[1], glob) +
+        translate_statement(ftree[1], glob, funcs) +
         condition +
         [('ozjmp', len(body) + len(update) + 2)] +
         body + update +
@@ -238,18 +251,18 @@ def translate_statement(ftree, glob):
   print('Warning: statement tree %s could not be translated.' % (ftree,))
   return []
 
-def translate_unop_expression(op, ftree, glob):
+def translate_unop_expression(op, ftree, glob, funcs):
   return (
-      translate_statement(ftree[1], glob) + 
+      translate_statement(ftree[1], glob, funcs) + 
       [(op,), ('store', ftree[1])])
 
-def translate_binop_expression(op, ftree, glob):
+def translate_binop_expression(op, ftree, glob, funcs):
   return (
-      translate_statement(ftree[1], glob) +
-      translate_statement(ftree[2], glob) +
+      translate_statement(ftree[1], glob, funcs) +
+      translate_statement(ftree[2], glob, funcs) +
       [(op,)])
 
-def translate_assign_expression(op, ftree, glob):
+def translate_assign_expression(op, ftree, glob, funcs):
   return (
-      translate_binop_expression(op, ftree, glob) +
+      translate_binop_expression(op, ftree, glob, funcs) +
       [('store', ftree[1])])

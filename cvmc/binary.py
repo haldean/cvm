@@ -35,6 +35,8 @@ ops = [
     'ojmp',
     'ldconst',
     'print',
+    'return',
+    'call',
     ]
 
 opcodes = dict(zip(ops, range(len(ops))))
