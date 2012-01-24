@@ -1,7 +1,10 @@
 *.pyc
 *.cvm
+*.o
 
 parser.out
 parsetab.py
 lextab.py
 parsetabs.pickle
+
+cvm/cvm
