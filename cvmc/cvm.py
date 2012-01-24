@@ -1,5 +1,5 @@
 from parse.c import parse
-from util import print_tree
+from util import print_tree, print_instructions
 from translate import translate
 from link import link
 from binary import write_binary, parse_instructions
@@ -24,8 +24,7 @@ def run(args):
 
     instructions = link(*translate(tree))
     if args.write_assembly:
-      for c in instructions:
-        print(c)
+      print_instructions(instructions)
 
     with open(args.output, 'w') as binout:
       write_binary(instructions, binout)

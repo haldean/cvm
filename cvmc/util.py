@@ -28,3 +28,10 @@ def print_tree(root, tablvl=0):
       print('  ' * tablvl + str(root))
     else:
       print('  ' * tablvl + 'None')
+
+def print_instructions(instrs):
+  for instr in instrs:
+    instr_str = instr[0].upper()
+    for arg in instr[1:]:
+      instr_str += ' %d' % arg
+    print(instr_str)
