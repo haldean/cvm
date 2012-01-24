@@ -22,6 +22,8 @@ def is_var(term):
   return isinstance(term, tuple) and len(term) == 2 and term[1] == 'var'
 
 def replace_function_addresses(code, func_locations):
+  # This is why people hate functional programmers. And this is why I hate that
+  # 'lambda' isn't a lambda.
   def replace_for_instruction(instr):
     def arg_sub(arg):
       if isinstance(arg, tuple) and len(arg) == 2 and arg[1] == 'func':
