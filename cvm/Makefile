@@ -1,6 +1,6 @@
 BINARY=cvm
 PYTHON=pypy
-CC=gcc
+CC=clang
 CFLAGS=-c -Wall
 LDFLAGS=
 SOURCES=$(wildcard *.c)

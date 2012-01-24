@@ -4,6 +4,7 @@
 
 //#define DEBUG
 #define MEMORY_SIZE 128
+#define STACK_DEPTH 128
 
 #define RS_PUSH(x) reg_stack_push(machine->reg_stack, (x))
 #define RS_POP reg_stack_pop(machine->reg_stack)
@@ -21,6 +22,7 @@ struct register_stack_struct {
 
 struct machine_state_struct {
   register_stack *reg_stack;
+  register_stack *return_addresses;
 
   memory_cell *memory;
   uint memory_size;
@@ -74,6 +76,7 @@ machine_state *machine_create() {
   machine->memory = mem_create(MEMORY_SIZE);
   machine->memory_size = MEMORY_SIZE;
   machine->reg_stack = reg_stack_create(32);
+  machine->return_addresses = reg_stack_create(STACK_DEPTH);
   machine->code = NULL;
   machine->code_len = 0;
   machine->program_counter = 0;
@@ -139,6 +142,15 @@ void machine_run_instruction(
     case POP:
       RS_POP;
       break;
+
+    case CALL:
+      reg_stack_push(machine->return_addresses, machine->program_counter + 1);
+      machine->program_counter = argument;
+      goto skip_pc_incr;
+
+    case RETURN:
+      machine->program_counter = reg_stack_pop(machine->return_addresses);
+      goto skip_pc_incr;
 
     case STORE:
       machine->memory[(uint) argument] = RS_POP;
