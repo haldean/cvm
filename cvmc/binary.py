@@ -3,6 +3,8 @@ import ctypes
 ops = [
     'nop',
     'halt',
+    'push',
+    'pop',
     'store',
     'load',
     'incr',

@@ -131,6 +131,15 @@ void machine_run_instruction(
       machine->error = 1;
       break;
 
+    case PUSH:
+      operand1 = RS_POP;
+      RS_PUSH(operand1);
+      RS_PUSH(operand1);
+      break;
+    case POP:
+      RS_POP;
+      break;
+
     case STORE:
       machine->memory[(uint) argument] = RS_POP;
       break;

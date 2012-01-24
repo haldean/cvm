@@ -230,7 +230,9 @@ def translate_statement(ftree, glob):
         [('ojmp', -len(body) - len(update) - len(condition) - 1), ('nop',)])
 
   # Numeric constant
-  if 'i' in ftree[1] or 'l' in ftree[1] or 'f' in ftree[1] or 'd' in ftree[1]:
+  if ('i' in ftree[1] or 'l' in ftree[1] or
+      'f' in ftree[1] or 'd' in ftree[1] or
+      'c' in ftree[1]):
     return [('ldconst', ftree[0])]
 
   print('Warning: statement tree %s could not be translated.' % (ftree,))
