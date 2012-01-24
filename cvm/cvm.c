@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "opcodes.h"
 
-#define DEBUG
+//#define DEBUG
 #define MEMORY_SIZE 128
 
 #define RS_PUSH(x) reg_stack_push(machine->reg_stack, (x))
@@ -122,48 +122,137 @@ void machine_load_program(machine_state *machine, FILE *data) {
 
 void machine_run_instruction(
     machine_state *machine, instr_op opcode, instr_arg argument) {
+  memory_cell operand1, operand2;
+
   switch (opcode) {
     case NOP:
       break;
     case HALT:
       machine->error = 1;
       break;
+
     case STORE:
       machine->memory[(uint) argument] = RS_POP;
       break;
     case LOAD:
       RS_PUSH(machine->memory[(uint) argument]);
       break;
-    case LDCONST:
-      RS_PUSH(argument);
+
+    case INCR:
+      RS_PUSH(RS_POP + 1);
+      break;
+    case DECR:
+      RS_PUSH(RS_POP - 1);
+      break;
+
+    case NOT:
+      RS_PUSH(!RS_POP);
+      break;
+    case BNOT:
+      RS_PUSH(~RS_POP);
+      break;
+
+    case MUL:
+      RS_PUSH(RS_POP * RS_POP);
       break;
     case ADD:
       RS_PUSH(RS_POP + RS_POP);
       break;
-    case MUL:
-      RS_PUSH(RS_POP * RS_POP);
+    case SUB:
+      operand2 = RS_POP;
+      operand1 = RS_POP;
+      RS_PUSH(operand1 - operand2);
+      break;
+    case DIV:
+      operand2 = RS_POP;
+      operand1 = RS_POP;
+      RS_PUSH(operand1 / operand2);
+      break;
+    case MOD:
+      operand2 = RS_POP;
+      operand1 = RS_POP;
+      RS_PUSH(operand1 % operand2);
+      break;
+
+    case AND:
+      RS_PUSH(RS_POP & RS_POP);
+      break;
+    case OR:
+      RS_PUSH(RS_POP | RS_POP);
+      break;
+    case XOR:
+      RS_PUSH(RS_POP ^ RS_POP);
+      break;
+
+    case LSH:
+      operand2 = RS_POP;
+      operand1 = RS_POP;
+      RS_PUSH(operand1 << operand2);
+      break;
+    case RSH:
+      operand2 = RS_POP;
+      operand1 = RS_POP;
+      RS_PUSH(operand1 >> operand2);
+      break;
+
+    case BAND:
+      RS_PUSH(RS_POP && RS_POP);
+      break;
+    case BOR:
+      RS_PUSH(RS_POP || RS_POP);
+      break;
+
+    case EQ:
+      RS_PUSH(RS_POP == RS_POP);
+      break;
+    case GEQ:
+      operand2 = RS_POP;
+      operand1 = RS_POP;
+      RS_PUSH(operand1 >= operand2);
+      break;
+    case LEQ:
+      operand2 = RS_POP;
+      operand1 = RS_POP;
+      RS_PUSH(operand1 <= operand2);
+      break;
+    case GT:
+      operand2 = RS_POP;
+      operand1 = RS_POP;
+      RS_PUSH(operand1 > operand2);
       break;
     case LT:
-      RS_PUSH(RS_POP >= RS_POP);
+      operand2 = RS_POP;
+      operand1 = RS_POP;
+      RS_PUSH(operand1 < operand2);
       break;
-    case OJMP:
-      machine->program_counter += (signed char) argument;
-      goto skip_pc_incr;
+    case NEQ:
+      RS_PUSH(RS_POP != RS_POP);
+      break;
+
     case OZJMP:
       if (RS_POP == 0) {
         machine->program_counter += (signed char) argument;
         goto skip_pc_incr;
       }
       break;
+    case OJMP:
+      machine->program_counter += (signed char) argument;
+      goto skip_pc_incr;
+    case LDCONST:
+      RS_PUSH(argument);
+      break;
   }
 
   machine->program_counter++;
 
 skip_pc_incr:
+
 #ifdef DEBUG
   printf("PC: %d, REG: ", machine->program_counter);
   reg_stack_print(machine);
 #endif
+
+  return;
 }
 
 void machine_run(machine_state *machine) {
@@ -204,7 +293,9 @@ int main(int argc, char** argv) {
   machine_load_program(machine, input_file);
   fclose(input_file);
 
+#if DEBUG
   machine_print_code(machine);
+#endif
   machine_run(machine);
   machine_free(machine);
   return 0;
