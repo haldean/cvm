@@ -31,10 +31,12 @@
 #define XOR 25
 #define ADDR 26
 #define OZJMP 27
-#define OJMP 28
-#define LDCONST 29
+#define ONZJMP 28
+#define OJMP 29
+#define LDCONST 30
+#define PRINT 31
 char **opcode_map() {
-  char **opcode_names = malloc(30 * sizeof(char *));
+  char **opcode_names = malloc(32 * sizeof(char *));
   opcode_names[NOP] = "NOP";
   opcode_names[HALT] = "HALT";
   opcode_names[STORE] = "STORE";
@@ -63,8 +65,10 @@ char **opcode_map() {
   opcode_names[XOR] = "XOR";
   opcode_names[ADDR] = "ADDR";
   opcode_names[OZJMP] = "OZJMP";
+  opcode_names[ONZJMP] = "ONZJMP";
   opcode_names[OJMP] = "OJMP";
   opcode_names[LDCONST] = "LDCONST";
+  opcode_names[PRINT] = "PRINT";
   return opcode_names;
 }
 #endif

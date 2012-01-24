@@ -29,8 +29,10 @@ ops = [
     'xor',
     'addr',
     'ozjmp',
+    'onzjmp',
     'ojmp',
     'ldconst',
+    'print',
     ]
 
 opcodes = dict(zip(ops, range(len(ops))))
@@ -57,6 +59,21 @@ def write_binary(code, out):
 
   for line in code:
     to_binary(line, out)
+
+def parse_instructions(source):
+  def instr_from_line(line):
+    def arg_from_str(ar):
+      try:
+        return int(ar)
+      except:
+        return ord(eval(ar)[0])
+
+    args = map(str.lower, line.split(' '))
+    args[1:] = map(arg_from_str, args[1:])
+    return tuple(args)
+
+  instructions = map(instr_from_line, filter(lambda x: x, source.split('\n')))
+  return instructions
 
 def generate_c_header():
   print('#ifndef __CVM_OPCODES__\n#define __CVM_OPCODES__')

@@ -235,11 +235,22 @@ void machine_run_instruction(
         goto skip_pc_incr;
       }
       break;
+    case ONZJMP:
+      if (RS_POP != 0) {
+        machine->program_counter += (signed char) argument;
+        goto skip_pc_incr;
+      }
+      break;
     case OJMP:
       machine->program_counter += (signed char) argument;
       goto skip_pc_incr;
+
     case LDCONST:
       RS_PUSH(argument);
+      break;
+
+    case PRINT:
+      printf("%c", (unsigned char) RS_POP);
       break;
   }
 
@@ -270,7 +281,10 @@ void machine_run(machine_state *machine) {
     machine_run_instruction(machine, opcode, argument);
   }
 
+#ifdef DEBUG
   mem_print(machine);
+#endif
+
   free(opcode_names);
 }
 
@@ -293,9 +307,6 @@ int main(int argc, char** argv) {
   machine_load_program(machine, input_file);
   fclose(input_file);
 
-#if DEBUG
-  machine_print_code(machine);
-#endif
   machine_run(machine);
   machine_free(machine);
   return 0;

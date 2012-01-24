@@ -1,22 +1,18 @@
 from cvmc.env import *
 from cvmc.cvm import run
+from argparse import ArgumentParser
 
-if '-i' in sys.argv:
-  import readline
-  while True:
-    try:
-      line = read_input('> ')
-      if not line.endswith(';'):
-        line += ';'
-    except EOFError:
-      break
-    if line == 'quit':
-      break
-    run(line)
-else:
-  if len(sys.argv) > 1:
-    with open(sys.argv[1], 'r') as f:
-      s = f.read()
-  else:
-    s = sys.stdin.read()
-  run(s)
+def main():
+  ap = ArgumentParser(description='Run the CVM compiler.')
+  ap.add_argument(
+      '-a', '--assemble', action='store_true',
+      help='convert a file containing assembly to bytecode')
+  ap.add_argument(
+      '-o', '--output', default='out.cvm', metavar='BYTECODE_FILE',
+      help='output bytecode file')
+  ap.add_argument('input_file', metavar='INPUT_FILE')
+
+  args = ap.parse_args()
+  run(args)
+
+main()
