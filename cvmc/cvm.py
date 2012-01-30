@@ -18,13 +18,13 @@ def run(args):
       write_binary(parse_instructions(source), binout)
   else:
     tree = parse(preprocess(source))
-    if args.write_ast:
+    if args.print_ast:
       print_tree(tree)
     if not tree:
       return
 
     instructions = link(*translate(tree))
-    if args.write_assembly:
+    if args.print_assembly:
       print_instructions(instructions)
 
     with open(args.output, 'w') as binout:

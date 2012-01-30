@@ -213,7 +213,7 @@ uint find_free_memory_of_size(uint size, memory_page *mem) {
     return NIL;
   } 
 
-  int start_addr = 1;
+  int start_addr = NIL + 1;
   int offset;
 
   while (start_addr + size < mem->size) {
@@ -235,7 +235,7 @@ uint find_free_memory_of_size(uint size, memory_page *mem) {
   }
 
   printf("Out of memory: could not find a memory block of size %d\n", size);
-  return (uint) -1;
+  return NIL;
 }
 
 void machine_run_instruction(
@@ -281,6 +281,9 @@ void machine_run_instruction(
       goto skip_pc_incr;
 
     case ALLOC:
+      if (argument == -1) {
+        argument = RS_POP;
+      }
       RS_PUSH(find_free_memory_of_size(argument, machine->memory));
       break;
 

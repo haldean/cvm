@@ -11,7 +11,7 @@ def translate(root):
   for item in root:
     if item[0] == 'fun':
       func = translate_function(item, glob, funcs)
-      funcs[item[2][0][0]] = func
+      funcs[func.name] = func
     elif item[0] == 'declare':
       for var, init in item[2]:
         cvmtype, name = cvmtypes.declarator((item[1], var))
@@ -26,13 +26,22 @@ def translate(root):
   return glob, funcs, init_code
 
 def translate_function(ftree, glob, funcs):
-  fname = ftree[2][0][0]
-  fargs = list(map(cvmtypes.declarator, ftree[2][1]))
+  if ftree[2][0][0] == '*':
+    ptr = True
+    fname = ftree[2][1][0][0]
+    fargs = list(map(cvmtypes.declarator, ftree[2][1][1]))
+  else:
+    ptr = False
+    fname = ftree[2][0][0]
+    fargs = list(map(cvmtypes.declarator, ftree[2][1]))
+
   fcode, flocals = translate_compound(ftree[3], glob, funcs)
   if 'void' in ftree[1]:
     fret = None
   else:
     fret = cvmtypes.typefor(ftree[1])
+    if ptr:
+      fret = cvmtypes.cvmptr(fret)
 
   func = function(fname, [], fargs, fret, flocals)
 
@@ -49,11 +58,6 @@ def translate_function(ftree, glob, funcs):
     func.frame_size += cvmtype.bytecount
 
   prepend = []
-  for name, init in map(lambda x: (x[0], x[1][1]), flocals.items()):
-    if init:
-      prepend += translate_statement(init, glob, funcs)
-      prepend.append(('lstore', local_addr_offsets[name]))
-
   for cvmtype, name in reversed(fargs):
     prepend.append(('lstore', local_addr_offsets[name]))
   fcode = prepend + fcode
@@ -96,7 +100,6 @@ def translate_compound(ftree, glob, funcs):
       code.extend(translate_declaration(var, data, glob, funcs))
   for node in ftree[first_statement:]:
     code.extend(translate_statement(node, glob, funcs))
-
   return code, loc
 
 def translate_declaration(var, data, glob, funcs):

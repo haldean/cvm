@@ -11,17 +11,17 @@ def main():
       '-o', '--output', default='out.cvm', metavar='BYTECODE_FILE',
       help='output bytecode file')
   ap.add_argument(
-      '--write-assembly', action='store_true',
+      '--print-assembly', action='store_true',
       help='write out generated assembly instructions')
   ap.add_argument(
-      '--write-ast', action='store_true',
+      '--print-ast', action='store_true',
       help='write out AST')
   ap.add_argument('input_file', metavar='INPUT_FILE')
 
   args = ap.parse_args()
-  try:
-    run(args)
-  except Exception as e:
-    print(e)
+  #try:
+  run(args)
+  #except Exception as e:
+  #  print(e)
 
 main()

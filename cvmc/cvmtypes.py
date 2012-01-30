@@ -11,6 +11,8 @@ class cvmtype(object):
   __repr__ = __str__
 
 class cvmptr(object):
+  bytecount = 1
+
   def __init__(self, pointsto):
     self.pointsto = pointsto
 

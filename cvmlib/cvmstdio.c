@@ -1,5 +1,5 @@
 void putc(char c) {
-  c;
+  asm("LLOAD 0");
   asm("PRINT");
   return;
 }
