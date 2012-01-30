@@ -19,6 +19,9 @@ def main():
   ap.add_argument('input_file', metavar='INPUT_FILE')
 
   args = ap.parse_args()
-  run(args)
+  try:
+    run(args)
+  except Exception as e:
+    print(e)
 
 main()
