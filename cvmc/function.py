@@ -5,6 +5,7 @@ class function(object):
     self.args = args
     self.retype = retype
     self.loc = loc
+    self.frame_size = 0
 
   def __str__(self):
     return 'function %s: %s -> %s' % (self.name, self.args, self.retype)

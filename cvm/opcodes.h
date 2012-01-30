@@ -39,8 +39,11 @@
 #define PRINT 33
 #define RETURN 34
 #define CALL 35
+#define LLOAD 36
+#define LSTORE 37
+#define ALLOC 38
 char **opcode_map() {
-  char **opcode_names = malloc(36 * sizeof(char *));
+  char **opcode_names = malloc(39 * sizeof(char *));
   opcode_names[NOP] = "NOP";
   opcode_names[HALT] = "HALT";
   opcode_names[PUSH] = "PUSH";
@@ -77,6 +80,9 @@ char **opcode_map() {
   opcode_names[PRINT] = "PRINT";
   opcode_names[RETURN] = "RETURN";
   opcode_names[CALL] = "CALL";
+  opcode_names[LLOAD] = "LLOAD";
+  opcode_names[LSTORE] = "LSTORE";
+  opcode_names[ALLOC] = "ALLOC";
   return opcode_names;
 }
 #endif

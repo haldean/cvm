@@ -1,7 +1,11 @@
-int test(int ignore) {
-  return 7;
+void putc(char c) {
+  /* loads c and puts it on the stack. */
+  c;
+  asm("PRINT");
+  return;
 }
 
 int main() {
-  test(5);
+  putc('a');
+  putc('\n');
 }

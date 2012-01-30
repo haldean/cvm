@@ -37,6 +37,9 @@ ops = [
     'print',
     'return',
     'call',
+    'lload',
+    'lstore',
+    'alloc',
     ]
 
 opcodes = dict(zip(ops, range(len(ops))))

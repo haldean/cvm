@@ -14,23 +14,26 @@ def link(glob, funcs, init_code):
     func_locations[func] = len(code)
     code.extend(codeobj.code)
 
-  code = replace_function_addresses(code, func_locations)
+  code = replace_function_addresses(code, funcs, func_locations)
   code = static_allocate(code, glob)
   return code
 
 def is_var(term):
   return isinstance(term, tuple) and len(term) == 2 and term[1] == 'var'
 
-def replace_function_addresses(code, func_locations):
-  # This is why people hate functional programmers. And this is why I hate that
-  # 'lambda' isn't a lambda.
-  def replace_for_instruction(instr):
-    def arg_sub(arg):
-      if isinstance(arg, tuple) and len(arg) == 2 and arg[1] == 'func':
-        return func_locations[arg[0]]
-      else: return arg
-    return tuple(map(arg_sub, instr))
-  return map(replace_for_instruction, code)
+def is_func(term):
+  return isinstance(term, tuple) and len(term) == 2 and term[1] == 'func'
+
+def replace_function_addresses(code, funcs, func_locations):
+  gen = []
+  for line in code:
+    if line[0] == 'call' and len(line) > 1 and is_func(line[1]):
+      gen.append((line[0], func_locations[line[1][0]]))
+    elif line[0] == 'ldconst' and len(line) > 1 and is_func(line[1]):
+      gen.append((line[0], funcs[line[1][0]].frame_size))
+    else:
+      gen.append(line)
+  return gen
 
 def static_allocate(code, glob):
   glob_locations = {}
@@ -45,7 +48,7 @@ def static_allocate(code, glob):
     terms = list(line)
     if len(line) > 1 and is_var(line[1]):
       terms[1] = glob_locations[line[1][0]]
-    if len(line) > 2 and is_var(line[2]):
-      terms[2] = glob_locations[line[2][0]]
+    elif len(line) > 2:
+      raise Exception('Only support 1 argument per instruction in linker')
     gen.append(tuple(terms))
   return gen

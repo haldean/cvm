@@ -1,4 +1,6 @@
+from binary import parse_instructions
 from function import function
+from link import is_var
 import cvmtypes
 
 def translate(root):
@@ -8,8 +10,8 @@ def translate(root):
   init_code = []
   for item in root:
     if item[0] == 'fun':
-      function = translate_function(item, glob, funcs)
-      funcs[item[2][0][0]] = function
+      func = translate_function(item, glob, funcs)
+      funcs[item[2][0][0]] = func
     elif item[0] == 'declare':
       for var, init in item[2]:
         cvmtype, name = cvmtypes.declarator((item[1], var))
@@ -27,8 +29,46 @@ def translate_function(ftree, glob, funcs):
   fname = ftree[2][0][0]
   fargs = list(map(cvmtypes.declarator, ftree[2][1]))
   fcode, flocals = translate_compound(ftree[3], glob, funcs)
-  fret = cvmtypes.typefor(ftree[1])
-  return function(fname, fcode, fargs, fret, flocals)
+  if 'void' in ftree[1]:
+    fret = None
+  else:
+    fret = cvmtypes.typefor(ftree[1])
+
+  func = function(fname, [], fargs, fret, flocals)
+
+  # Calculate storage required for stack frame
+  func.frame_size = 0
+  local_addr_offsets = {}
+
+  for cvmtype, name in fargs:
+    local_addr_offsets[name] = func.frame_size
+    func.frame_size += cvmtype.bytecount
+
+  for name, cvmtype in map(lambda x: (x[0], x[1][0]), flocals.items()):
+    local_addr_offsets[name] = func.frame_size
+    func.frame_size += cvmtype.bytecount
+
+  prepend = []
+  for name, init in map(lambda x: (x[0], x[1][1]), flocals.items()):
+    if init:
+      prepend += translate_statement(init, glob, funcs)
+      prepend.append(('lstore', local_addr_offsets[name]))
+
+  for cvmtype, name in reversed(fargs):
+    prepend.append(('lstore', local_addr_offsets[name]))
+  fcode = prepend + fcode
+
+  for line in fcode:
+    if len(line) > 1 and is_var(line[1]) and line[1][0] in local_addr_offsets:
+      if line[0] in ['load', 'store']:
+        func.code.append(('l%s' % line[0], local_addr_offsets[line[1][0]]))
+      else:
+        raise Exception('Accessed non-register memory in an instruction other'
+            ' than load and store')
+    else:
+      func.code.append(line)
+
+  return func
 
 def add_declaration(loc, decl):
   for var, init in decl[2]:
@@ -69,7 +109,6 @@ def translate_statement(ftree, glob, funcs):
   TODO:
 
   BREAK
-  CALL
   GOTO
   '''
   # Assignment
@@ -83,6 +122,9 @@ def translate_statement(ftree, glob, funcs):
 
   # Call stack-related
   if ftree[0] == 'call':
+    # Calls to asm() skip translation and go straight to instruction parser.
+    if ftree[1][0] == 'asm':
+      return parse_instructions(ftree[2][0][0])
     func = funcs[ftree[1][0]]
     if len(func.args) != len(ftree[2]):
       raise Exception('Not enough arguments to function "%s"' % ftree[1][0])
@@ -90,10 +132,14 @@ def translate_statement(ftree, glob, funcs):
     arg_evals = []
     for arg in ftree[2]:
       arg_evals.extend(translate_statement(arg, glob, funcs))
-    return arg_evals + [('call', (ftree[1][0], 'func'))]
+    funcpair = (ftree[1][0], 'func')
+    return arg_evals + [('ldconst', funcpair), ('call', funcpair)]
 
   if ftree[0] == 'return':
-    return translate_statement(ftree[1], glob, funcs) + [('return',)]
+    if ftree[1]:
+      return translate_statement(ftree[1], glob, funcs) + [('return',)]
+    else:
+      return [('return',)]
 
   # Unary operators
   if ftree[0] == '++':
