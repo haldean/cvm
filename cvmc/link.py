@@ -1,5 +1,5 @@
 def link(glob, funcs, init_code):
-  code = []
+  code = [('ldconst', funcs['main'].frame_size), ('call', ('main', 'func'))]
   code.extend(init_code)
   func_locations = {}
 

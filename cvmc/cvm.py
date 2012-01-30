@@ -3,6 +3,7 @@ from util import print_tree, print_instructions
 from translate import translate
 from link import link
 from binary import write_binary, parse_instructions
+from preprocess import preprocess
 
 def run(args):
   if args.input_file:
@@ -28,12 +29,3 @@ def run(args):
 
     with open(args.output, 'w') as binout:
       write_binary(instructions, binout)
-
-def preprocess(source):
-  result = ''
-  for line in source.split('\n'):
-    if not line.startswith('#'):
-      result += line + '\n'
-    else:
-      result += '\n'
-  return result
